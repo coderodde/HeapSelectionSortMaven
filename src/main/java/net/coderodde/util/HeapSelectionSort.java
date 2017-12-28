@@ -26,6 +26,16 @@ public final class HeapSelectionSort {
     
     private HeapSelectionSort() {}
     
+    /**
+     * Stably sorts the array range {@code array[fromIndex], ..., 
+     * array[toIndex - 1]}.
+     * 
+     * @param <T>        the array component type.
+     * @param array      the array holding the target range.
+     * @param fromIndex  the starting inclusive index.
+     * @param toIndex    the ending exclusive index.
+     * @param comparator the array component comparator.
+     */
     public static <T> void sort(T[] array, 
                                 int fromIndex, 
                                 int toIndex, 
@@ -54,9 +64,40 @@ public final class HeapSelectionSort {
         }
     }
     
+    /**
+     * Sorts stably the entire input array.
+     * 
+     * @param <T>        the array component type.
+     * @param array      the target array.
+     * @param comparator the array component comparator.
+     */
     public static <T> void sort(T[] array, Comparator<? super T> comparator) {
         Objects.requireNonNull(array);
         sort(array, 0, array.length, comparator);
+    }
+    
+    /**
+     * Stably sorts the array range {@code array[fromIndex], ...,
+     * array[toIndex - 1]} using a natural order.
+     * 
+     * @param <T>       the array component type.
+     * @param array     the array holding the target range.
+     * @param fromIndex the starting inclusive index.
+     * @param toIndex   the ending exclusive index.
+     */
+    public static <T> void sort(T[] array, int fromIndex, int toIndex) {
+        sort(array, fromIndex, toIndex, NATURAL_COMPARATOR);
+    }
+    
+    /**
+     * Stably sorts the entire array using a natural order.
+     * 
+     * @param <T>   the array component type.
+     * @param array the array to sort.
+     */
+    public static <T> void sort(T[] array) {
+        Objects.requireNonNull(array);
+        sort(array, 0, array.length);
     }
     
     /**
@@ -89,17 +130,47 @@ public final class HeapSelectionSort {
     }
     
     /**
-     * This class implements a run heap.
+     * This class implements a run heap. Each run is represented by two values:
+     * {@code fromIndexArray[i]} gives the index in {@code array} that contains
+     * the current first element of the {@code i}th run. {@code toIndexArray[i]}
+     * gives the index in {@code array} that contains the last element of the
+     * {@code i}th run.
      * 
      * @param <T> the array component type.
      */
     private static final class RunHeap<T> {
+        
+        /**
+         * The number of runs in this heap.
+         */
         private int size;
+        
+        /**
+         * The copy of the target input range.
+         */
         private final T[] array;
+        
+        /**
+         * The array of indices for the current first elements in the runs.
+         */
         private final int[] fromIndexArray;
+        
+        /**
+         * The array of indices for the last elements in the runs.
+         */
         private final int[] toIndexArray;
+        
+        /**
+         * The array component comparator.
+         */
         private final Comparator<? super T> comparator;
         
+        /**
+         * Initializes the run heap.
+         * 
+         * @param array      the copy of the input array range.
+         * @param comparator the array component comparator.
+         */
         RunHeap(T[] array, Comparator<? super T> comparator) {
             this.array = array;
             this.fromIndexArray = new int[array.length / 2 + 1];
@@ -185,6 +256,11 @@ public final class HeapSelectionSort {
             return index1 < index2;
         }
         
+        /**
+         * Restores the run heap invariant.
+         * 
+         * @param index the starting index.
+         */
         private void siftDown(int index) {
             int leftChildIndex = (index << 1) + 1;
             int rightChildIndex = leftChildIndex + 1;
@@ -226,16 +302,67 @@ public final class HeapSelectionSort {
         }
     }
     
+    /**
+     * This class implements facilities for building run heaps.
+     * 
+     * @param <T> the array component type.
+     */
     private static final class RunHeapBuilder<T> {
+        
+        /**
+         * The resulting run heap.
+         */
         private final RunHeap<T> runHeap;
+        
+        /**
+         * The array component comparator.
+         */
         private final Comparator<? super T> comparator;
+        
+        /**
+         * The copy of the input array range.
+         */
         private final T[] array;
+        
+        /**
+         * The starting index of the current run.
+         */
         private int head;
+        
+        /**
+         * The current left array component of currently processed pair of
+         * consecutive array components.
+         */
         private int left;
+        
+        /**
+         * The current right array component of currently processed pair of 
+         * consecutive array components.
+         */
         private int right;
+        
+        /**
+         * The inclusive index of the very last array component of the copy of
+         * the input range.
+         */
         private final int last;
+        
+        /**
+         * Indicates whether the previously scanned run was descending. If the
+         * previous run was strictly descending, there is chance that the 
+         * current run's smallest array component is no smaller than the largest
+         * array component of the previous run. If that is the case, we can 
+         * trivially "merge" the two simply by adding the length of the right
+         * run to the descriptor of the previous run.
+         */
         private boolean previousRunWasDescending;
         
+        /**
+         * Constructs the run heap builder.
+         * 
+         * @param array      the copy of the target input range.
+         * @param comparator the array component comparator.
+         */
         RunHeapBuilder(T[] array, Comparator<? super T> comparator) {
             this.runHeap = new RunHeap<>(array, comparator);
             this.comparator = comparator;
@@ -244,6 +371,11 @@ public final class HeapSelectionSort {
             this.last = array.length - 1;
         }
         
+        /**
+         * Build the run heap.
+         * 
+         * @return unheapified run heap.
+         */
         RunHeap<T> build() {
             while (left < last) {
                 head = left;
