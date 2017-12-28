@@ -172,9 +172,9 @@ public final class HeapSelectionSort {
          * @param runIndex2 the index of the second run.
          * @return {@code true} only if the first run should take precedence.
          */
-        private boolean isLessThan(int runIndex1, int runIndex2) {
-            T element1 = array[fromIndexArray[runIndex1]];
-            T element2 = array[fromIndexArray[runIndex2]];
+        private boolean isLessThan(int index1, int index2) {
+            T element1 = array[index1];
+            T element2 = array[index2];
             
             int cmp = comparator.compare(element1, element2);
             
@@ -182,43 +182,41 @@ public final class HeapSelectionSort {
                 return cmp < 0;
             }
             
-            return fromIndexArray[runIndex1] < fromIndexArray[runIndex2];
+            return index1 < index2;
         }
         
         private void siftDown(int index) {
             int leftChildIndex = (index << 1) + 1;
             int rightChildIndex = leftChildIndex + 1;
             int minIndex = index;
-            int targetFromIndex = fromIndexArray[index];
-            int targetToIndex = toIndexArray[index];
-            
+            int saveFromIndex = fromIndexArray[index];
+            int saveToIndex = toIndexArray[index];
+            int targetIndex = fromIndexArray[index];
+
             while (true) {
                 if (leftChildIndex < size 
-                        && isLessThan(leftChildIndex, index)) {
+                        && isLessThan(fromIndexArray[leftChildIndex], targetIndex)) {
                     minIndex = leftChildIndex;
                 }
-                
+
                 if (minIndex == index) {
                     if (rightChildIndex < size
-                            && isLessThan(rightChildIndex, index)) {
+                            && isLessThan(fromIndexArray[rightChildIndex], targetIndex)) {
                         minIndex = rightChildIndex;
                     }
                 } else {
                     if (rightChildIndex < size
-                            && isLessThan(rightChildIndex, leftChildIndex)) {
+                            && isLessThan(fromIndexArray[rightChildIndex], fromIndexArray[minIndex])) {
                         minIndex = rightChildIndex;
                     }
                 }
                 
                 if (minIndex == index) {
-                    // No swap. Just insert the run.
-                    fromIndexArray[minIndex] = targetFromIndex;
-                    toIndexArray[minIndex] = targetToIndex;
+                    fromIndexArray[minIndex] = saveFromIndex;
+                    toIndexArray[minIndex] = saveToIndex;
                     return;
                 }
                 
-                // No swap here either. Just move up the maximum to current 
-                // position.
                 fromIndexArray[index] = fromIndexArray[minIndex];
                 toIndexArray[index] = toIndexArray[minIndex];
                 index = minIndex;

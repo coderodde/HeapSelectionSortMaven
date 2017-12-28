@@ -7,9 +7,14 @@ import java.util.Random;
 public class Demo {
 
     public static void main(final String... args) {
-        Integer[] arr = { 1, 2, 3, -2, -3, 4 };
+        long seed = 1514460446758L; System.currentTimeMillis();
+        Random r = new Random(seed);
+        System.out.println("seed = " + seed);
+        Integer[] arr = createRandomIntegerArray(11, r);
+        Integer[] arr2 = arr.clone();
         HeapSelectionSort.sort(arr, Integer::compareTo);
-        
+        Arrays.sort(arr2, Integer::compareTo);
+        System.out.println(arraysEqual(arr, arr2));
         System.out.println(Arrays.toString(arr));
         
         System.exit(0);
@@ -63,6 +68,7 @@ public class Demo {
 
         for (int i = 0; i < array1.length; ++i) {
             if (array1[i] != array2[i]) {
+//            if (!array1[i].equals(array2[i])) {
                 return false;
             }
         }
